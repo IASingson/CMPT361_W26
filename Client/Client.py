@@ -1,11 +1,11 @@
-# This is an example from "Computer Networking: A Top Down Approach" textbook chapter 2
+# CMPT361 Assignment 1 using the source code from lecture
 import socket
 import sys
 
 def client():
     # Server Information
     serverName = '127.0.0.1' #'localhost'
-    serverPort = 12000
+    serverPort = 13000
     
     #Create client socket that useing IPv4 and TCP protocols 
     try:
@@ -17,16 +17,30 @@ def client():
     try:
         #Client connect with the server
         clientSocket.connect((serverName,serverPort))
+        print("Connected to the server.")
+
+        # Client receives message from server: 'Welcome to our system.\nEnter your username: '
+        message = clientSocket.recv(2048).decode('ascii')
+        clientUsername = input(message)
+
+        # Client sends username to the server
+        clientSocket.send(clientUsername.encode('ascii'))
         
-        #Client send message to the server
-        message = input('Enter a message:').encode('ascii')
-        sent_size = clientSocket.send(message)
-        print("The number of bytes sent: ",sent_size)
+        # Client waits for server response
+        serverResponse = clientSocket.recv(2048).decode('ascii')
+        errorMessage = 'Incorrect username. Connection Terminated.'
+
+        # If the wrong username is entered print error message and terminate connection to the server
+        if serverResponse == errorMessage:
+            print(serverResponse)
+            clientSocket.close()
+        else:
+            # If the correct username is entered, print the server menu and send client user choice to server
+            clientChoice = input(serverResponse)
+            clientSocket.send(clientChoice.encode('ascii'))
+
         
-        # Client receives a message from the server and print it
-        message = clientSocket.recv(2048)
-        print(message.decode('ascii'))
-        
+
         # Client terminate connection with the server
         clientSocket.close()
         
