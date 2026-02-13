@@ -1,6 +1,7 @@
 # CMPT361 Assignment 1 using the source code from lecture
 import socket
 import sys
+import os
 
 def client():
     # Server Information
@@ -17,7 +18,7 @@ def client():
     try:
         #Client connect with the server
         clientSocket.connect((serverName,serverPort))
-        print("Connected to the server.")
+        print('Connected to the server.')
 
         # Client receives message from server: 'Welcome to our system.\nEnter your username: '
         message = clientSocket.recv(2048).decode('ascii')
@@ -30,16 +31,51 @@ def client():
         serverResponse = clientSocket.recv(2048).decode('ascii')
         errorMessage = 'Incorrect username. Connection Terminated.'
 
-        # If the wrong username is entered print error message and terminate connection to the server
+        # If the incorrect username is entered print error message and terminate connection to the server
         if serverResponse == errorMessage:
             print(serverResponse)
             clientSocket.close()
-        else:
-            # If the correct username is entered, print the server menu and send client user choice to server
-            clientChoice = input(serverResponse)
+        
+        # If the correct username is entered, print the server menu and send client user choice to server
+
+        clientChoice = input(serverResponse)
+        #clientSocket.send(clientChoice.encode('ascii'))
+
+        while True:
+
             clientSocket.send(clientChoice.encode('ascii'))
 
+            # Client receives server response to chosen menu option 
+            message = clientSocket.recv(2048).decode('ascii')
+
+            
+            # If servers asks 'Please provide the filename: ', get filesize and then send filename and filesize to server
+            if message ==  'Please provide the filename: ':
+                filename = input(message)
+                filePath = os.path.abspath(filename)
+                fileSize = os.path.getsize(filePath)
         
+
+                fileInfo = f'{filename}\n{fileSize}'
+                clientSocket.send(fileInfo.encode('ascii'))
+
+                # Client receives OK message from server
+                message = clientSocket.recv(2048)
+                print(message.decode("ascii")) # 'Ok [filesize]'
+                print('Upload process completed')
+
+                # Back to server menu
+                serverMenu = serverResponse
+                clientChoice = input(serverMenu)
+
+            else:
+                # Client chose option 1, server sends current file database
+                pass 
+         
+
+
+
+        print(message) # 'Connection terminated' 
 
         # Client terminate connection with the server
         clientSocket.close()
