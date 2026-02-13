@@ -30,94 +30,96 @@ def server():
     serverSocket.listen(1)
         
     while 1:
-        serverMenu = "\n\nPlease select the operation:\n1) View uploaded files' information\n2) Upload a file \
-                \n3) Terminate the connection\nChoice: ".encode('ascii')
         try:
             # Server accepts client connection
             connectionSocket, addr = serverSocket.accept()
             print(addr,'   ',connectionSocket)
             print("Client is connected to the server") # delete before submitting
 
-            # Server sends client a message
-            message = 'Welcome to our system.\nEnter your username: '.encode('ascii')
-            connectionSocket.send(message)
+            # Send client welcome message and ask for username
+            msgToClient = 'Welcome to our system. \nEnter your username: '.encode('ascii')
+            connectionSocket.send(msgToClient)
 
-            # Server recieved client username
-            clientUsername = connectionSocket.recv(2048).decode('ascii')
-            authUser = 'user1'
+            # Receive client username
+            msgFromClient = connectionSocket.recv(2048).decode('ascii')
 
-            # If the username is correct, send the client the menu
-            if clientUsername == authUser:
-                connectionSocket.send(serverMenu)
-
-            # Otherwise, send an error message and terminate the connection
-            else:
-                errorMessage = 'Incorrect username. Connection Terminated'.encode('ascii')
-                connectionSocket.send(errorMessage)
+            # If client is NOT user1, terminate the connection
+            if msgFromClient != 'user1':
+                msgToClient = 'Incorrect username. Connection terminated'.encode('ascii')
+                connectionSocket.send(msgToClient)
                 connectionSocket.close()
-
-            # Server receives client user choice
-            menuOption = connectionSocket.recv(2048).decode('ascii')
-
-            # As long as the client does not choose 3, keep the connection
-            while menuOption != '3':
-
-                # If client chooses option 1, perform file metadata viewing protocol
-                if menuOption == '1':
-                    
-                    # Get information of files from Database.json
-
-                    # Convert data to formatted string
-
-                    # Send to client 
-                    pass
-
-                # If client chooses option 2, perform file upload protocol 
-                elif menuOption == '2':
-                    
-                    # Send client message 'Please provide the file name: '
-                    message = 'Please provide the filename: '.encode('ascii')
-                    connectionSocket.send(message)
+            else:
+                serverMenu = "\n\nPlease select the operation:\n1) View uploaded files' information\n2) Upload a file \
+                \n3) Terminate the connection\nChoice: ".encode('ascii')
+                connectionSocket.send(serverMenu)
+            
+            while True:
+                msgFromClient = connectionSocket.recv(2048).decode('ascii')
                 
-
-                    # Get file information
-                    message = connectionSocket.recv(2048).decode('ascii')
-                    clientFile = message.split('\n')
-                    fileName = clientFile[0]
-                    fileSize = clientFile[1]
+                # If client chooses 1, send database information
+                if msgFromClient == '1':
+                    pass
+                
+                # If client chooses 2, start file upload subprotocol
+                elif msgFromClient == '2':
                     
-                    # Send confirmation message 'Ok [filesize] to client'
-                    confirmationMessage = f'Ok {fileSize}'.encode('ascii')
-                    connectionSocket.send(confirmationMessage)
+                    # Get file name
+                    msgToClient = 'Please provide the filename: '.encode('ascii')
+                    connectionSocket.send(msgToClient)
 
-                    '''
-                    # Uploading file information to database
-                    fileInfo = {
-                        "Name": fileName,
-                        "fileSize": fileSize,
-                        "dateAndTimeUploaded": datetime.datetime.now()
+                    # Upon receiving file information, send confirmation message
+                    msgFromClient = connectionSocket.recv(2048).decode('ascii')
+                    fileInformation = msgFromClient.split('\n')
+                    filename = fileInformation[0]
+                    fileSize = fileInformation[1]
+
+                    msgToClient = f'Ok {fileSize}'
+                    connectionSocket.send(msgToClient.encode('ascii'))
+
+
+                    # Copy file to server folder
+                    with open('Server/'+filename, 'wb') as file:
+                        while True:
+                            data = connectionSocket.recv(2048)
+                            if not data:
+                                break
+                            file.write(data)
+
+                    # Format file metada
+                    fileMetaData = {
+                        "name": filename,
+                        "sizeInBytes": fileSize,
+                        "dateTimeUploaded": datetime.datetime.now() 
                     }
 
                     # Convert to JSON
-                    toUpload = json.dumps(fileInfo)
-                    print(toUpload)
-                    print("hello")
-                    '''
-                    
-                    # Send client server menu again
+                    uploadToDB = json.dumps(fileMetaData)
+
+                    # Store file metada in database
+                    with open('Database.json', 'wb') as file:
+                        file.write(uploadToDB)    
+
+                    # Send server menu to client again
                     connectionSocket.send(serverMenu)
+                
+                # When client chooses option 3
+                else:
+                    break
+
+                serverSocket.close()
+
+                    
+
 
 
                     
-           
-           # If the client chooses option 3, terminate connection
-            connectionSocket.send('Connection Terminated'.encode('ascii'))
 
-            
+
+
+
+
            
             
-            #Server terminates client connection
-            connectionSocket.close()
             
         except socket.error as e:
             print('An error occured:',e)
