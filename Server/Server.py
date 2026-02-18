@@ -2,7 +2,6 @@
 
 import socket
 import sys
-import os 
 import json
 import datetime
 
@@ -78,41 +77,28 @@ def server():
 
                     # Copy file to server folder
                     fileBytes = 0
-                    with open('Server/'+filename, 'wb') as file:
+                    with open('Server\\'+filename, 'wb') as file:
                         while True: 
                             if fileBytes == fileSize:
                                 break
                             data = connectionSocket.recv(2048)
                             file.write(data)
                             fileBytes += len(data)
-
-                    '''        
-                    with open('Server/'+filename, 'wb') as file:
-                        while True:
-                            data = connectionSocket.recv(2048)
-                            if not data:
-                                break   # not breaking FIX THISSS
-                          file.write(data)
-                    '''        
-                        
-                            
-
                     
-                    print('file done copying')
-          
+                    dateTimeUploaded = str(datetime.datetime.now())
+
                     # Format file metada
                     fileMetaData = {
                         "name": filename,
                         "sizeInBytes": fileSize,
-                        "dateTimeUploaded": datetime.datetime.now() 
+                        "dateTimeUploaded": dateTimeUploaded
                     }
-
+                  
                     # Convert to JSON
-                    print('uploading to db')
-                    uploadToDB = json.dumps(fileMetaData)
+                    uploadToDB = json.dumps(fileMetaData, indent = 4)
 
                     # Store file metada in database
-                    with open('Database.json', 'w') as file:
+                    with open('Server\Database.json', 'w') as file:
                         json.dump(uploadToDB, file)
 
                     # Send server menu to client again

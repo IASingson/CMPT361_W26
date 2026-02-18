@@ -62,7 +62,6 @@ def client():
                 print(msgFromServer)
 
                 # Send file data to server
-
                 with open(filename, 'rb') as file:
                     while True:
                         data = file.read(2048)
@@ -70,9 +69,6 @@ def client():
                             break
                         clientSocket.send(data)
                     
-
-               
-
                 print('Upload process completed')
 
                 # Client receives server menu again 
