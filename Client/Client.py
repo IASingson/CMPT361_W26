@@ -62,13 +62,17 @@ def client():
                 print(msgFromServer)
 
                 # Send file data to server
+
                 with open(filename, 'rb') as file:
-                    for data in file:
-                        clientSocket.sendall(data)
+                    while True:
+                        data = file.read(2048)
+                        if not data:
+                            break
+                        clientSocket.send(data)
                     
-                
-                    
-                
+
+               
+
                 print('Upload process completed')
 
                 # Client receives server menu again 

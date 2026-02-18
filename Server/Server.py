@@ -71,20 +71,35 @@ def server():
                     msgFromClient = connectionSocket.recv(2048).decode('ascii')
                     fileInformation = msgFromClient.split('\n')
                     filename = fileInformation[0]
-                    fileSize = fileInformation[1]
+                    fileSize = int(fileInformation[1])
 
                     msgToClient = f'Ok {fileSize}'
                     connectionSocket.send(msgToClient.encode('ascii'))
 
-
                     # Copy file to server folder
+                    fileBytes = 0
+                    with open('Server/'+filename, 'wb') as file:
+                        while True: 
+                            if fileBytes == fileSize:
+                                break
+                            data = connectionSocket.recv(2048)
+                            file.write(data)
+                            fileBytes += len(data)
+
+                    '''        
                     with open('Server/'+filename, 'wb') as file:
                         while True:
                             data = connectionSocket.recv(2048)
                             if not data:
-                                break
-                            file.write(data)
+                                break   # not breaking FIX THISSS
+                          file.write(data)
+                    '''        
+                        
+                            
 
+                    
+                    print('file done copying')
+          
                     # Format file metada
                     fileMetaData = {
                         "name": filename,
@@ -93,15 +108,16 @@ def server():
                     }
 
                     # Convert to JSON
+                    print('uploading to db')
                     uploadToDB = json.dumps(fileMetaData)
 
                     # Store file metada in database
-                    with open('Database.json', 'wb') as file:
-                        file.write(uploadToDB)    
+                    with open('Database.json', 'w') as file:
+                        json.dump(uploadToDB, file)
 
                     # Send server menu to client again
                     connectionSocket.send(serverMenu)
-                
+
                 # When client chooses option 3
                 else:
                     break
