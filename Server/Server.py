@@ -57,7 +57,30 @@ def server():
                 
                 # If client chooses 1, send database information
                 if msgFromClient == '1':
-                    pass
+                    # Read from Database.json
+                    # If file already exists
+                    try:
+                        with open('Database.json', 'r') as file:
+                            data = json.load(file)
+                        print(data)
+                        msgToServer = 'Name\tSize (Bytes)\tUpload Date and Time\n'
+                        for key in data:
+                            filename = key
+                            fileSize = data[key]['size']
+                            dateTimeUploaded = data[key]['dateTimeUploaded']
+                            newline = '\n'
+                            msgToServer += f'{filename:<32}{str(fileSize):<40}{dateTimeUploaded}{newline}'
+                        
+                        # Get size of text and then send size to client
+                        size = len(msgToServer)
+                        connectionSocket.send(size.encode('ascii'))
+
+                        # Send the current database to client
+                        connectionSocket.send(msgToServer.encode('ascii'))
+
+                    except:
+                        connectionSocket.send('Name\tSize (Bytes)\tUpload Date and Time'.encode('ascii'))
+
                 
                 # If client chooses 2, start file upload subprotocol
                 elif msgFromClient == '2':
@@ -114,29 +137,19 @@ def server():
                         with open('Server\\Database.json', 'w') as file:
                             json.dump(fileMetaData, file, indent = 2)
 
-
-
                     # Send server menu to client again
                     connectionSocket.send(serverMenu)
 
                 # When client chooses option 3
-                else:
+                elif msgFromClient == '3':
+                    connectionSocket.send('Terminating connection...'.encode('ascii'))
                     break
 
-                serverSocket.close()
+                else:
+                    connectionSocket.send(serverMenu)
 
                     
-
-
-
-                    
-
-
-
-
-
-           
-            
+                serverSocket.close()       
             
         except socket.error as e:
             print('An error occured:',e)
@@ -146,7 +159,6 @@ def server():
             print('Goodbye')
             serverSocket.close() 
             sys.exit(0)
-            
-        
-#-------
+                   
+#-----------------------------------
 server()

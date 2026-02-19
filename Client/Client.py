@@ -44,8 +44,15 @@ def client():
 
             msgFromServer = clientSocket.recv(2048).decode('ascii')
 
-            #clientSocket.send(msgToServer.encode('ascii'))
-            if msgFromServer == 'Please provide the filename: ':
+            if msgFromServer == '1':
+                msgFromServer = clientSocket.recv(2048).decode('ascii')
+                size = msgFromServer
+
+                msgFromServer = clientSocket.recv(size).decode('ascii')
+                print(msgFromServer)
+
+            # Client chooses 2) Upload a file
+            elif msgFromServer == 'Please provide the filename: ':
                 # Ask client user for filename to upload 
                 filename = input(msgFromServer)
                 
@@ -78,21 +85,20 @@ def client():
                 # Send client choice to server
                 clientSocket.send(msgToServer.encode('ascii'))
 
-            # If server terminates connection
-            elif msgFromServer == '':
+            # Client chooses option 3) Terminate the connection
+            elif msgFromServer == 'Terminating connection...':
                 print('Connection terminated')
-                clientSocket.close()
-
-            # If sent database information
+                break
+            
+            # If client user inputs anything else
             else:
-                print(msgFromServer)
+                # Show client server menu again 
+                msgFromServer = clientSocket.recv(2048).decode('ascii')
+                msgToServer = input(msgFromServer)
 
-
-
-
-
-
-
+                clientSocket.send(msgToServer.encode('ascii'))
+            
+            clientSocket.close()
         
     except socket.error as e:
         print('An error occured:',e)
