@@ -88,18 +88,33 @@ def server():
                     dateTimeUploaded = str(datetime.datetime.now())
 
                     # Format file metada
+
                     fileMetaData = {
-                        "name": filename,
-                        "sizeInBytes": fileSize,
-                        "dateTimeUploaded": dateTimeUploaded
+                        filename: 
+                        {'size': fileSize, 
+                         'dateTimeUploaded': dateTimeUploaded
+                        }
                     }
                   
-                    # Convert to JSON
-                    uploadToDB = json.dumps(fileMetaData, indent = 4)
-
                     # Store file metada in database
-                    with open('Server\Database.json', 'w') as file:
-                        json.dump(uploadToDB, file)
+                    try:
+                        # If database file already exists
+
+                        # Read file and add new data to existing data
+                        with open('Server\\Database.json', 'r') as file:
+                            data = json.load(file)
+                        data.update(fileMetaData)
+                        
+                        # Write existing data + new data back to the file 
+                        with open('Server\\Database.json', 'w') as file:
+                            json.dump(data, file, indent = 2)
+
+                    # If no database file exists, make a new one and add data
+                    except: 
+                        with open('Server\\Database.json', 'w') as file:
+                            json.dump(fileMetaData, file, indent = 2)
+
+
 
                     # Send server menu to client again
                     connectionSocket.send(serverMenu)

@@ -74,6 +74,9 @@ def client():
                 # Client receives server menu again 
                 msgFromServer = clientSocket.recv(2048).decode('ascii')
                 msgToServer = input(msgFromServer)
+                
+                # Send client choice to server
+                clientSocket.send(msgToServer.encode('ascii'))
 
             # If server terminates connection
             elif msgFromServer == '':
