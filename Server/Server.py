@@ -146,12 +146,9 @@ def server():
                     # Send server menu to client again
                     connectionSocket.send(serverMenu)
 
-                # When client chooses option 3
-                elif msgFromClient == '3':
-                    break
-
+                # When client chooses option 3 or inputs anything else
                 else:
-                    connectionSocket.send(serverMenu)
+                    break
 
 
             connectionSocket.close()     
