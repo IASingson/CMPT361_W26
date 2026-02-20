@@ -154,7 +154,7 @@ def server():
                     connectionSocket.send(serverMenu)
 
 
-            serverSocket.close()       
+            connectionSocket.close()     
             
         except socket.error as e:
             print('An error occured:',e)
