@@ -94,19 +94,10 @@ def client():
                 # Send client choice to server
                 clientSocket.send(msgToServer.encode('ascii'))
 
-            # Client chooses option 3) Terminate the connection
-            elif msgToServer == '3':
+            # If client user inputs anything 3 or anything else
+            else:
                 print('Connection terminated')
                 break
-
-            # If client user inputs anything else
-            else:
-
-                # Show client server menu again 
-                msgFromServer = clientSocket.recv(2048).decode('ascii')
-                msgToServer = input(msgFromServer)
-
-                clientSocket.send(msgToServer.encode('ascii'))
             
             
         clientSocket.close()
