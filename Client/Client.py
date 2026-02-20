@@ -18,7 +18,6 @@ def client():
     try:
         # Client connect with the server
         clientSocket.connect((serverName,serverPort))
-        print('Connected to the server.') # DELETE BEFORE SUBMITTING
 
         # Welcome message from server
         msgFromServer = clientSocket.recv(2048).decode('ascii')
@@ -32,75 +31,74 @@ def client():
 
         # If wrong username, terminate connection
         if msgFromServer == 'Incorrect username. Connection terminated':
-            print(msgFromServer)
+            clientSocket.shutdown(socket.SHUT_RDWR)
             clientSocket.close()
+            print(msgFromServer)
+
         else:
             # Get user input on server menu
             msgToServer = input(msgFromServer)
             clientSocket.send(msgToServer.encode('ascii'))
 
-        # Loop while client does not choose option 3
-        while True:
+            # Loop while client does not choose option 3
+            while True:
 
-            msgFromServer = clientSocket.recv(2048).decode('ascii')
-
-            if msgToServer == '1':
-
-                size = int(msgFromServer)
-
-                msgFromServer = clientSocket.recv(size).decode('ascii')
-                print(msgFromServer)
-
-                # Client receives server menu again 
                 msgFromServer = clientSocket.recv(2048).decode('ascii')
-                msgToServer = input(msgFromServer)
+
+                if msgToServer == '1':
+
+                    size = int(msgFromServer)
+
+                    msgFromServer = clientSocket.recv(size).decode('ascii')
+                    print(msgFromServer)
+
+                    # Client receives server menu again 
+                    msgFromServer = clientSocket.recv(2048).decode('ascii')
+                    msgToServer = input(msgFromServer)
                 
-                # Send client choice to server
-                clientSocket.send(msgToServer.encode('ascii'))
+                    # Send client choice to server
+                    clientSocket.send(msgToServer.encode('ascii'))
 
-
-            # Client chooses 2) Upload a file
-            elif msgToServer == '2':
-                # Ask client user for filename to upload: 'Please provide the file name:'
-                filename = input(msgFromServer)
+                # Client chooses 2) Upload a file
+                elif msgToServer == '2':
+                    # Ask client user for filename to upload: 'Please provide the file name:'
+                    filename = input(msgFromServer)
                 
-                # Get file size
-                filePath = os.path.abspath(filename)
-                fileSize = os.path.getsize(filePath)
+                    # Get file size
+                    filePath = os.path.abspath(filename)
+                    fileSize = os.path.getsize(filePath)
 
-                # Send file information to server in formatted string
-                newline = '\n'
-                msgToServer = f'{filename}{newline}{fileSize}'
-                clientSocket.send(msgToServer.encode('ascii'))
+                    # Send file information to server in formatted string
+                    newline = '\n'
+                    msgToServer = f'{filename}{newline}{fileSize}'
+                    clientSocket.send(msgToServer.encode('ascii'))
 
-                # Get confirmation message and print to client user
-                msgFromServer = clientSocket.recv(2048).decode('ascii')
-                print(msgFromServer)
+                    # Get confirmation message and print to client user
+                    msgFromServer = clientSocket.recv(2048).decode('ascii')
+                    print(msgFromServer)
 
-                # Send file data to server
-                with open(filename, 'rb') as file:
-                    while True:
-                        data = file.read(2048)
-                        if not data:
-                            break
-                        clientSocket.send(data)
+                    # Send file data to server
+                    with open(filename, 'rb') as file:
+                        while True:
+                            data = file.read(2048)
+                            if not data:
+                                break
+                            clientSocket.send(data)
                     
-                print('Upload process completed')
+                    print('Upload process completed')
 
-                # Client receives server menu again 
-                msgFromServer = clientSocket.recv(2048).decode('ascii')
-                msgToServer = input(msgFromServer)
+                    # Client receives server menu again 
+                    msgFromServer = clientSocket.recv(2048).decode('ascii')
+                    msgToServer = input(msgFromServer)
                 
-                # Send client choice to server
-                clientSocket.send(msgToServer.encode('ascii'))
+                    # Send client choice to server
+                    clientSocket.send(msgToServer.encode('ascii'))
 
-            # If client user inputs anything 3 or anything else
-            else:
-                print('Connection terminated')
-                break
-            
-            
-        clientSocket.close()
+                # If client user inputs anything 3 or anything else, terminate connection and break out of loop
+                else:
+                    clientSocket.close()
+                    print('Connection terminated')
+                    break
         
     except socket.error as e:
         print('An error occured:',e)

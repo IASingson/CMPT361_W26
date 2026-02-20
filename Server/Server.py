@@ -23,8 +23,6 @@ def server():
         print('Error in server socket binding:',e)
         sys.exit(1)        
         
-    print('The server is ready to accept connections')
-        
     # The server can only have one connection in its queue waiting for acceptance
     serverSocket.listen(1)
         
@@ -33,7 +31,6 @@ def server():
             # Server accepts client connection
             connectionSocket, addr = serverSocket.accept()
             print(addr,'   ',connectionSocket)
-            print("Client is connected to the server") # delete before submitting
 
             # Send client welcome message and ask for username
             msgToClient = 'Welcome to our system. \nEnter your username: '.encode('ascii')
@@ -46,7 +43,7 @@ def server():
             if msgFromClient != 'user1':
                 msgToClient = 'Incorrect username. Connection terminated'.encode('ascii')
                 connectionSocket.send(msgToClient)
-                connectionSocket.close()
+                break
             else:
                 serverMenu = "\n\nPlease select the operation:\n1) View uploaded files' information\n2) Upload a file \
                 \n3) Terminate the connection\nChoice: ".encode('ascii')
@@ -64,27 +61,32 @@ def server():
 
                         with open('Server\\Database.json', 'r') as file:
                             data = json.load(file)
-                            msgToServer = '\nName\t\t\t\tSize (Bytes)\t\t\t\tUpload Date and Time\n'
+                            msgToClient = '\nName\t\t\t\tSize (Bytes)\t\t\t\tUpload Date and Time\n'
                             for key in data:
                                 filename = key
                                 fileSize = data[key]['size']
                                 dateTimeUploaded = data[key]['dateTimeUploaded']
                                 newline = '\n'
-                                msgToServer += f'{filename:<32}{str(fileSize):<40}{dateTimeUploaded}{newline}'
+                                msgToClient += f'{filename:<32}{str(fileSize):<40}{dateTimeUploaded}{newline}'
                             
                         
                         # Get size of text and then send size to client
-                        size = str(len(msgToServer))
+                        size = str(len(msgToClient))
                         connectionSocket.send(size.encode('ascii')) 
 
                         # Send the current database to client
-                        connectionSocket.send(msgToServer.encode('ascii'))
+                        connectionSocket.send(msgToClient.encode('ascii'))
 
                         # Send server menu to client
                         connectionSocket.send(serverMenu)
 
                     except:
-                        connectionSocket.send('Name\tSize (Bytes)\tUpload Date and Time'.encode('ascii'))
+                        msgToClient = '\nName\t\t\t\tSize (Bytes)\t\t\t\tUpload Date and Time\n'
+                        
+                        size = str(len(msgToClient))
+                        connectionSocket.send(size.encode('ascii'))
+
+                        connectionSocket.send(msgToClient)
 
                         connectionSocket.send(serverMenu)
                 
