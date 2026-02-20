@@ -53,6 +53,7 @@ def server():
                 connectionSocket.send(serverMenu)
             
             while True:
+
                 msgFromClient = connectionSocket.recv(2048).decode('ascii')
                 
                 # If client chooses 1, send database information
@@ -60,27 +61,32 @@ def server():
                     # Read from Database.json
                     # If file already exists
                     try:
-                        with open('Database.json', 'r') as file:
+
+                        with open('Server\\Database.json', 'r') as file:
                             data = json.load(file)
-                        print(data)
-                        msgToServer = 'Name\tSize (Bytes)\tUpload Date and Time\n'
-                        for key in data:
-                            filename = key
-                            fileSize = data[key]['size']
-                            dateTimeUploaded = data[key]['dateTimeUploaded']
-                            newline = '\n'
-                            msgToServer += f'{filename:<32}{str(fileSize):<40}{dateTimeUploaded}{newline}'
+                            msgToServer = '\nName\t\t\t\tSize (Bytes)\t\t\t\tUpload Date and Time\n'
+                            for key in data:
+                                filename = key
+                                fileSize = data[key]['size']
+                                dateTimeUploaded = data[key]['dateTimeUploaded']
+                                newline = '\n'
+                                msgToServer += f'{filename:<32}{str(fileSize):<40}{dateTimeUploaded}{newline}'
+                            
                         
                         # Get size of text and then send size to client
-                        size = len(msgToServer)
-                        connectionSocket.send(size.encode('ascii'))
+                        size = str(len(msgToServer))
+                        connectionSocket.send(size.encode('ascii')) 
 
                         # Send the current database to client
                         connectionSocket.send(msgToServer.encode('ascii'))
 
+                        # Send server menu to client
+                        connectionSocket.send(serverMenu)
+
                     except:
                         connectionSocket.send('Name\tSize (Bytes)\tUpload Date and Time'.encode('ascii'))
 
+                        connectionSocket.send(serverMenu)
                 
                 # If client chooses 2, start file upload subprotocol
                 elif msgFromClient == '2':
@@ -142,14 +148,13 @@ def server():
 
                 # When client chooses option 3
                 elif msgFromClient == '3':
-                    connectionSocket.send('Terminating connection...'.encode('ascii'))
                     break
 
                 else:
                     connectionSocket.send(serverMenu)
 
-                    
-                serverSocket.close()       
+
+            serverSocket.close()       
             
         except socket.error as e:
             print('An error occured:',e)
