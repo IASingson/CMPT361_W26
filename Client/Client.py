@@ -46,7 +46,6 @@ def client():
                 msgFromServer = clientSocket.recv(2048).decode('ascii')
 
                 if msgToServer == '1':
-
                     size = int(msgFromServer)
 
                     msgFromServer = clientSocket.recv(size).decode('ascii')

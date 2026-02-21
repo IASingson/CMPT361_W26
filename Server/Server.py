@@ -30,7 +30,6 @@ def server():
         try:
             # Server accepts client connection
             connectionSocket, addr = serverSocket.accept()
-            print(addr,'   ',connectionSocket)
 
             # Send client welcome message and ask for username
             msgToClient = 'Welcome to our system. \nEnter your username: '.encode('ascii')
@@ -49,46 +48,56 @@ def server():
                 \n3) Terminate the connection\nChoice: ".encode('ascii')
                 connectionSocket.send(serverMenu)
             
+
             while True:
 
                 msgFromClient = connectionSocket.recv(2048).decode('ascii')
                 
                 # If client chooses 1, send database information
                 if msgFromClient == '1':
-                    # Read from Database.json
-                    # If file already exists
-                    try:
 
+                    dbHeadings = '\nName\t\t\t\tSize (Bytes)\t\t\t\tUpload Date and Time'
+                    size = str(len(dbHeadings))
+                    msgToClient = dbHeadings
+
+                    # Check if the file exists 
+                    try: 
+                        # If the file exists and is not empty
                         with open('Server\\Database.json', 'r') as file:
                             data = json.load(file)
-                            msgToClient = '\nName\t\t\t\tSize (Bytes)\t\t\t\tUpload Date and Time\n'
                             for key in data:
                                 filename = key
                                 fileSize = data[key]['size']
                                 dateTimeUploaded = data[key]['dateTimeUploaded']
                                 newline = '\n'
                                 msgToClient += f'{filename:<32}{str(fileSize):<40}{dateTimeUploaded}{newline}'
-                            
                         
-                        # Get size of text and then send size to client
-                        size = str(len(msgToClient))
-                        connectionSocket.send(size.encode('ascii')) 
-
+                        # Send the size of the message first
+                        connectionSocket.send(size.encode('ascii'))
+                        
                         # Send the current database to client
                         connectionSocket.send(msgToClient.encode('ascii'))
+                    
+                    # If the file doesn't exist, make one and send an empty database
+                    except FileNotFoundError:
+                        with open('Server\\Database.json', 'w') as file:
+                            file.write()
 
-                        # Send server menu to client
-                        connectionSocket.send(serverMenu)
-
-                    except:
-                        msgToClient = '\nName\t\t\t\tSize (Bytes)\t\t\t\tUpload Date and Time\n'
-                        
-                        size = str(len(msgToClient))
+                        # Send the size of the string first
                         connectionSocket.send(size.encode('ascii'))
 
+                        # Send the headings
+                        connectionSocket.send(msgToClient.encode('ascii'))
+                    
+                    # If the file exists but is empty, send the headings
+                    except:
+                        connectionSocket.send(size.encode('ascii'))
                         connectionSocket.send(msgToClient)
 
-                        connectionSocket.send(serverMenu)
+                    # Send the server menu to client
+
+                    connectionSocket.send(serverMenu)
+
                 
                 # If client chooses 2, start file upload subprotocol
                 elif msgFromClient == '2':
@@ -148,6 +157,7 @@ def server():
                     # Send server menu to client again
                     connectionSocket.send(serverMenu)
 
+
                 # When client chooses option 3 or inputs anything else
                 else:
                     break
@@ -155,6 +165,7 @@ def server():
 
             connectionSocket.close()     
             
+
         except socket.error as e:
             print('An error occured:',e)
             serverSocket.close() 
